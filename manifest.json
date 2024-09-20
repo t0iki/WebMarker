@@ -1,8 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Text Highlighter",
+  "name": "WebMarker",
   "version": "1.0",
-  "description": "Highlight selected text on web pages and persist highlights across sessions.",
+  "description": "A Chrome extension built with Vite and React",
+  "background": {
+    "service_worker": "dist/background.js"
+  },
   "permissions": ["storage", "activeTab", "scripting"],
   "content_scripts": [
     {
