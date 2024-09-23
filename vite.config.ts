@@ -8,11 +8,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        background: resolve(__dirname, "src/background.ts"),
         content: resolve(__dirname, "src/content/index.tsx"),
       },
       output: {
         entryFileNames: "[name].js",
+        assetFileNames: "[name][extname]",
       },
     },
   },
