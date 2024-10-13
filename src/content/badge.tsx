@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
-import { getAllMarks, setMark } from "../storage/mark";
-import { getXPathForElement } from "../utils/xpath";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { clearMarksByUrl, getAllMarks, setMark } from "../storage/mark";
 import { Mark } from "../types/mark";
+import { getSelectionRangeXPath } from "../utils/xpath";
+import { HIGHLIGHT_CLASS } from "../constants";
 
 type MousePos = {
   x: number;
@@ -10,38 +11,48 @@ type MousePos = {
 
 export const Badge = () => {
   const [isShowBadge, setIsShowBadge] = useState(false);
+  const isSelecting = useRef(false);
   const [draftMark, setDraftMark] = useState<Mark | null>(null);
   const [pos, setPos] = useState<MousePos>({ x: -1, y: -1 });
 
   const onSelectText = () => {
+    console.log("mouse up");
+    isSelecting.current = false;
     const selection = window.getSelection();
-    if (!selection) return;
+
+    if (!selection || selection.toString().length === 0) {
+      setIsShowBadge(false);
+      setPos({ x: -1, y: -1 });
+      return;
+    }
     if (selection.rangeCount > 0) {
       const text = selection.toString();
+      let element = selection.anchorNode?.parentElement;
+      if (element?.classList.contains(HIGHLIGHT_CLASS)) {
+        element = element.parentElement;
+      }
+      if (!element) return;
+      const textContent = element?.textContent;
+      console.log(textContent);
+      const startOffset = textContent ? textContent.indexOf(text) : -1;
+      const endOffset = startOffset ? startOffset + text.length : -1;
+      console.log(startOffset, endOffset);
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
 
-      const startContainerXPath = getXPathForElement(range.startContainer);
-      const startOffset = range.startOffset;
-      const endContainerXPath = getXPathForElement(range.endContainer);
-      const endOffset = range.endOffset;
+      const xpath = getSelectionRangeXPath();
 
       const mark: Mark = {
         text,
-        startOffset,
-        endOffset,
-        startContainerXPath,
-        endContainerXPath,
+        startOffset: startOffset,
+        endOffset: endOffset,
+        startXPath: xpath ? xpath.startXPath : null,
+        endXPath: xpath ? xpath.endXPath : null,
       };
       setDraftMark(mark);
       setIsShowBadge(true);
       setPos({ x: rect.right, y: rect.top });
     }
-  };
-
-  const onDeselectText = () => {
-    setIsShowBadge(false);
-    setPos({ x: -1, y: -1 });
   };
 
   const style = useMemo(() => {
@@ -67,20 +78,28 @@ export const Badge = () => {
     console.log(marks);
   };
 
+  const onClear = async () => {
+    await clearMarksByUrl(location.href);
+  };
+
   useEffect(() => {
     document.addEventListener("selectstart", () => {
+      console.log("selectstart");
+      isSelecting.current = true;
       document.addEventListener("mouseup", onSelectText);
-      document.addEventListener("selectionchange", onDeselectText);
     });
   }, []);
 
   return isShowBadge ? (
     <div style={style} className={"bg-white"}>
       <button onClick={onClick} className={"m-2"}>
-        Add
+        Memo
       </button>
       <button onClick={onClickDebug} className={"m-2"}>
         debug
+      </button>
+      <button onClick={onClear} className={"m-2"}>
+        clear
       </button>
     </div>
   ) : null;

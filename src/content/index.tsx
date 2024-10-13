@@ -2,18 +2,18 @@ import { StrictMode } from "preact/compat";
 import { createRoot } from "preact/compat/client";
 import { Badge } from "./badge";
 import "../index.css";
-import { subscribe } from "../storage/mark";
-import { restoreMarks } from "./range";
+// import { subscribe } from "../storage/mark";
+// import { applyMarks } from "./marks";
 
 const main = () => {
   const container = document.createElement("webmarker-container");
   document.body.after(container);
 
-  restoreMarks();
+  // applyMarks();
 
-  subscribe(() => {
-    restoreMarks();
-  });
+  // subscribe(async () => {
+  //   await onAddMark();
+  // });
 
   createRoot(container).render(
     <StrictMode>

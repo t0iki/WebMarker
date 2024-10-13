@@ -2,8 +2,8 @@ export type Mark = {
   text: string;
   startOffset: number;
   endOffset: number;
-  startContainerXPath: string | null;
-  endContainerXPath: string | null;
+  startXPath: string | null;
+  endXPath: string | null;
 };
 
 export type WebMarks = {

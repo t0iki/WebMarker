@@ -17,8 +17,28 @@ export const getAllMarks = async () => {
   return (await bucket.get()).marks;
 };
 
+export const overwriteMarksByUrl = async (newMarks: Mark[], url: string) => {
+  const marks = await getAllMarks();
+  await bucket.set({
+    marks: {
+      ...marks,
+      [url]: newMarks,
+    },
+  });
+};
+
 export const getMarksByUrl = async (url: string) => {
   return (await bucket.get()).marks[url] || [];
+};
+
+export const clearMarksByUrl = async (url: string) => {
+  const marks = await getAllMarks();
+  await bucket.set({
+    marks: {
+      ...marks,
+      [url]: [],
+    },
+  });
 };
 
 export const subscribe = (callback: () => void) => {
