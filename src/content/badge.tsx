@@ -91,7 +91,7 @@ export const Badge = () => {
   }, []);
 
   return isShowBadge ? (
-    <div style={style} className={"bg-white"}>
+    <div style={style} className={"bg-white border text-black"}>
       <button onClick={onClick} className={"m-2"}>
         Memo
       </button>

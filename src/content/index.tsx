@@ -1,23 +1,18 @@
 import { StrictMode } from "preact/compat";
 import { createRoot } from "preact/compat/client";
 import { Badge } from "./badge";
-import "../index.css";
-// import { subscribe } from "../storage/mark";
-// import { applyMarks } from "./marks";
+import { List } from "./list";
 
 const main = () => {
-  const container = document.createElement("webmarker-container");
-  document.body.after(container);
+  const root = document.createElement("div");
+  const shadowRoot = root.attachShadow({ mode: "open" });
+  document.body.appendChild(root);
 
-  // applyMarks();
-
-  // subscribe(async () => {
-  //   await onAddMark();
-  // });
-
-  createRoot(container).render(
+  createRoot(shadowRoot).render(
     <StrictMode>
+      <style>{`@import 'https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css';`}</style>
       <Badge />
+      <List />
     </StrictMode>
   );
 };
