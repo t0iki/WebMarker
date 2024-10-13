@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
-import { getAllMarks, setMark } from "../storage/mark";
-import { getXPathForElement } from "../utils/xpath";
-import { Mark } from "../types/mark";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { clearMemosByUrl, getAllMemos, setMemo } from "../storage/memo";
+import { Memo } from "../types/memo";
 
 type MousePos = {
   x: number;
@@ -10,38 +9,31 @@ type MousePos = {
 
 export const Badge = () => {
   const [isShowBadge, setIsShowBadge] = useState(false);
-  const [draftMark, setDraftMark] = useState<Mark | null>(null);
+  const isSelecting = useRef(false);
+  const [draftMemo, setDraftMemo] = useState<Memo | null>(null);
   const [pos, setPos] = useState<MousePos>({ x: -1, y: -1 });
 
   const onSelectText = () => {
+    isSelecting.current = false;
     const selection = window.getSelection();
-    if (!selection) return;
+
+    if (!selection || selection.toString().length === 0) {
+      setIsShowBadge(false);
+      setPos({ x: -1, y: -1 });
+      return;
+    }
     if (selection.rangeCount > 0) {
       const text = selection.toString();
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
 
-      const startContainerXPath = getXPathForElement(range.startContainer);
-      const startOffset = range.startOffset;
-      const endContainerXPath = getXPathForElement(range.endContainer);
-      const endOffset = range.endOffset;
-
-      const mark: Mark = {
+      const memo: Memo = {
         text,
-        startOffset,
-        endOffset,
-        startContainerXPath,
-        endContainerXPath,
       };
-      setDraftMark(mark);
+      setDraftMemo(memo);
       setIsShowBadge(true);
       setPos({ x: rect.right, y: rect.top });
     }
-  };
-
-  const onDeselectText = () => {
-    setIsShowBadge(false);
-    setPos({ x: -1, y: -1 });
   };
 
   const style = useMemo(() => {
@@ -54,33 +46,39 @@ export const Badge = () => {
   }, [pos.x, pos.y]);
 
   const onClick = () => {
-    console.log("clicked");
-    if (draftMark) {
-      setMark({ url: location.href, mark: draftMark });
-      setDraftMark(null);
+    if (draftMemo) {
+      setMemo({ url: location.href, memo: draftMemo });
+      setDraftMemo(null);
       setIsShowBadge(false);
     }
   };
 
   const onClickDebug = async () => {
-    const marks = await getAllMarks();
-    console.log(marks);
+    const memos = await getAllMemos();
+    console.log(memos);
+  };
+
+  const onClear = async () => {
+    await clearMemosByUrl(location.href);
   };
 
   useEffect(() => {
     document.addEventListener("selectstart", () => {
+      isSelecting.current = true;
       document.addEventListener("mouseup", onSelectText);
-      document.addEventListener("selectionchange", onDeselectText);
     });
   }, []);
 
   return isShowBadge ? (
-    <div style={style} className={"bg-white"}>
+    <div style={style} className={"bg-white border text-black"}>
       <button onClick={onClick} className={"m-2"}>
-        Add
+        Memo
       </button>
       <button onClick={onClickDebug} className={"m-2"}>
         debug
+      </button>
+      <button onClick={onClear} className={"m-2"}>
+        clear
       </button>
     </div>
   ) : null;
