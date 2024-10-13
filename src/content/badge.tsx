@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { clearMarksByUrl, getAllMarks, setMark } from "../storage/mark";
-import { Mark } from "../types/mark";
-import { getSelectionRangeXPath } from "../utils/xpath";
-import { HIGHLIGHT_CLASS } from "../constants";
+import { clearMemosByUrl, getAllMemos, setMemo } from "../storage/memo";
+import { Memo } from "../types/memo";
 
 type MousePos = {
   x: number;
@@ -12,11 +10,10 @@ type MousePos = {
 export const Badge = () => {
   const [isShowBadge, setIsShowBadge] = useState(false);
   const isSelecting = useRef(false);
-  const [draftMark, setDraftMark] = useState<Mark | null>(null);
+  const [draftMemo, setDraftMemo] = useState<Memo | null>(null);
   const [pos, setPos] = useState<MousePos>({ x: -1, y: -1 });
 
   const onSelectText = () => {
-    console.log("mouse up");
     isSelecting.current = false;
     const selection = window.getSelection();
 
@@ -27,29 +24,13 @@ export const Badge = () => {
     }
     if (selection.rangeCount > 0) {
       const text = selection.toString();
-      let element = selection.anchorNode?.parentElement;
-      if (element?.classList.contains(HIGHLIGHT_CLASS)) {
-        element = element.parentElement;
-      }
-      if (!element) return;
-      const textContent = element?.textContent;
-      console.log(textContent);
-      const startOffset = textContent ? textContent.indexOf(text) : -1;
-      const endOffset = startOffset ? startOffset + text.length : -1;
-      console.log(startOffset, endOffset);
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
 
-      const xpath = getSelectionRangeXPath();
-
-      const mark: Mark = {
+      const memo: Memo = {
         text,
-        startOffset: startOffset,
-        endOffset: endOffset,
-        startXPath: xpath ? xpath.startXPath : null,
-        endXPath: xpath ? xpath.endXPath : null,
       };
-      setDraftMark(mark);
+      setDraftMemo(memo);
       setIsShowBadge(true);
       setPos({ x: rect.right, y: rect.top });
     }
@@ -65,26 +46,24 @@ export const Badge = () => {
   }, [pos.x, pos.y]);
 
   const onClick = () => {
-    console.log("clicked");
-    if (draftMark) {
-      setMark({ url: location.href, mark: draftMark });
-      setDraftMark(null);
+    if (draftMemo) {
+      setMemo({ url: location.href, memo: draftMemo });
+      setDraftMemo(null);
       setIsShowBadge(false);
     }
   };
 
   const onClickDebug = async () => {
-    const marks = await getAllMarks();
-    console.log(marks);
+    const memos = await getAllMemos();
+    console.log(memos);
   };
 
   const onClear = async () => {
-    await clearMarksByUrl(location.href);
+    await clearMemosByUrl(location.href);
   };
 
   useEffect(() => {
     document.addEventListener("selectstart", () => {
-      console.log("selectstart");
       isSelecting.current = true;
       document.addEventListener("mouseup", onSelectText);
     });
